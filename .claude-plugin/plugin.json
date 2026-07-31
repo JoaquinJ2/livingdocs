@@ -1,0 +1,9 @@
+{
+  "name": "livingdocs",
+  "description": "Create and maintain documentation that stays true to the code: vision, roadmap, feature docs and changelog.",
+  "version": "0.1.0",
+  "author": {
+    "name": "MotorK"
+  },
+  "skills": "./skills/"
+}
