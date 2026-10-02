@@ -69,7 +69,7 @@ One line per feature, slug identical in all three positions:
 
 `# Changelog`, then dated blocks `## YYYY-MM-DD`, newest first. Under each date, only the subsections that apply, in this order: `### Added`, `### Changed`, `### Fixed`, `### Removed`. Every bullet names in backticks the document that describes what it changed — normally the feature doc it affects.
 
-Some user-visible changes belong to no capability: the documentation system itself, the tooling and hooks around it, a repo-wide convention. Those bullets name the root document that describes them instead — `DDD.md` for the process and its tooling, `FEATURES.md` for the index of capabilities. Never invent a feature so a bullet has somewhere to point.
+Some user-visible changes belong to no capability: the documentation system itself, the tooling around it, a repo-wide convention. Those bullets name the root document that describes them instead — `DDD.md` for the process and its tooling, `FEATURES.md` for the index of capabilities. Never invent a feature so a bullet has somewhere to point.
 
 ```markdown
 ## 2026-07-29
@@ -87,9 +87,8 @@ Some user-visible changes belong to no capability: the documentation system itse
 ## The workflow
 
 1. **Change the code.** The unit of work is the change, not the file.
-2. **Run `/livingdocs-record`** before you call the work done. It reads the real diff, writes the changelog entry, and updates every feature doc the diff touched.
-3. **The stop hook re-prompts once** if code paths changed and neither `CHANGELOG.md` nor `features/` did. It fails open and never blocks twice.
-4. **Run `/livingdocs-audit`** periodically, or when you inherit a repo you do not trust. It writes nothing; it produces a numbered findings list. Approve the numbers you agree with and run `/livingdocs-backfill` with them.
+2. **Run `/livingdocs-record`** before you call the work done. It reads the real diff, writes the changelog entry, and updates every feature doc the diff touched. The agent does this itself; nothing re-prompts after the turn ends.
+3. **Run `/livingdocs-audit`** periodically, or when you inherit a repo you do not trust. It writes nothing; it produces a numbered findings list. Approve the numbers you agree with and run `/livingdocs-backfill` with them.
 
 ## The rules
 
@@ -108,6 +107,6 @@ Some user-visible changes belong to no capability: the documentation system itse
 - **Code paths that trigger the documentation obligation:** {{TRIGGER_PATHS}}
 - **Paths that satisfy it:** {{SATISFYING_PATHS}}
 
-Those last two lists are configuration, not prose: they live in [`.livingdocs.json`](.livingdocs.json) at the repo root, where both `bin/livingdocs-lint.mjs` and the stop hook read them. Change them there and mirror the change here. Both tools fall back to built-in defaults if that file is missing or malformed.
+Those last two lists are configuration, not prose: they live in [`.livingdocs.json`](.livingdocs.json) at the repo root, where `bin/livingdocs-lint.mjs` reads them. Change them there and mirror the change here. The lint falls back to built-in defaults if that file is missing or malformed.
 
 {{PROJECT_NOTES}}

@@ -1,6 +1,6 @@
 ---
 name: livingdocs-record
-description: Record the current change in CHANGELOG.md and update every feature doc it affects. Use when the user finishes a change and asks to update the docs or changelog, says the work is done and needs documenting, is prompted by the livingdocs stop hook, or says "/livingdocs-record".
+description: Record the current change in CHANGELOG.md and update every feature doc it affects. Use when the user finishes a change and asks to update the docs or changelog, says the work is done and needs documenting, or says "/livingdocs-record".
 ---
 
 # livingdocs: record
@@ -30,7 +30,7 @@ If a changed file appears in no feature doc, decide which it is:
 
 - **It belongs to an existing feature** whose `## Key files` is out of date — add it there.
 - **It is a capability with no doc at all** — create `features/<slug>/<slug>.md` from `../../templates/feature.md`, filling all eight sections. Under `## Related`, link only documents that already exist and name the rest in prose; a link to an unwritten file is a lint failure. Announce this; a new feature doc is a bigger deal than a changelog line.
-- **It is user-visible but owned by no capability** — the documentation system itself, the tooling, hooks or plugins around it, a repo-wide convention every contributor now follows. It gets a changelog bullet naming the root document that describes it — `DDD.md` for the process and its tooling, `FEATURES.md` for the index — and no feature doc. Never invent a feature so the bullet has somewhere to point; a capability nobody can ask for is not a capability.
+- **It is user-visible but owned by no capability** — the documentation system itself, the tooling or plugins around it, a repo-wide convention every contributor now follows. It gets a changelog bullet naming the root document that describes it — `DDD.md` for the process and its tooling, `FEATURES.md` for the index — and no feature doc. Never invent a feature so the bullet has somewhere to point; a capability nobody can ask for is not a capability.
 - **It is not user-visible** (build config, test helper, CI) — no doc, no changelog entry.
 
 ## 3. Write
