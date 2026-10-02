@@ -13,7 +13,7 @@ Equipos que trabajan con agentes de IA (Cursor o Claude Code) y quieren que la d
 
 - Un **contrato de formato** (`DDD.md`) que el linter y los skills respetan.
 - Skills de agente (`/livingdocs-*`) para instalar, inventariar, registrar cambios y auditar drift.
-- Un **linter estructural** (`bin/livingdocs-lint.mjs`) y un **stop hook** de Cursor que recuerda documentar antes de dar por cerrado un cambio.
+- Un **linter estructural** (`bin/livingdocs-lint.mjs`) que comprueba el formato y si el changelog se quedó atrás.
 
 ## Requisitos
 
@@ -49,11 +49,9 @@ Clona o descarga este repositorio y copia los archivos al proyecto destino. Rell
 | — | `features/.gitkeep` |
 | — | `.livingdocs.json` (ver [Configuración](#configuración)) |
 | [`assets/livingdocs-lint.mjs`](assets/livingdocs-lint.mjs) | `bin/livingdocs-lint.mjs` |
-| [`assets/hooks/livingdocs-stop.sh`](assets/hooks/livingdocs-stop.sh) | `.cursor/hooks/livingdocs-stop.sh` (`chmod +x`) |
-| [`assets/hooks.json`](assets/hooks.json) | fusionar en `.cursor/hooks.json` (no sobrescribir) |
 | — | sección `## Living documentation` en `AGENTS.md` y/o `CLAUDE.md` |
 
-Copia los scripts **tal cual**, sin editarlos: leen `.livingdocs.json` para las rutas del repo. Si `.cursor/hooks.json` ya existe, conserva su `version` y añade la entrada de livingdocs al array `stop` solo si aún no está.
+Copia el linter **tal cual**, sin editarlo: lee `.livingdocs.json` para las rutas del repo. Si una instalación anterior dejó `.cursor/hooks/livingdocs-stop.sh`, bórralo y quita su entrada del array `stop` en `.cursor/hooks.json`, sin tocar el resto de hooks.
 
 Añade (o sustituye el cuerpo de) esta sección en `AGENTS.md` / `CLAUDE.md`:
 
@@ -74,7 +72,7 @@ Sin el plugin, los comandos `/livingdocs-*` no estarán disponibles como skills;
 Flujo típico tras instalar:
 
 ```text
-/livingdocs-install      → scaffold (DDD, CHANGELOG, FEATURES, lint, hook)
+/livingdocs-install      → scaffold (DDD, CHANGELOG, FEATURES, lint)
 /livingdocs-vision       → VISION.md + ROADMAP.md
 /livingdocs-inventory    → FEATURES.md + features/<slug>/<slug>.md
 ```
@@ -127,7 +125,7 @@ Cada feature doc exige exactamente ocho H2, en este orden: Why it exists, Behavi
 
 | Comando | Qué hace |
 | --- | --- |
-| `/livingdocs-install` | Scaffold idempotente: docs base, `.livingdocs.json`, lint, stop hook, sección en AGENTS/CLAUDE |
+| `/livingdocs-install` | Scaffold idempotente: docs base, `.livingdocs.json`, lint, sección en AGENTS/CLAUDE |
 | `/livingdocs-vision` | Escribe o reescribe `VISION.md` y `ROADMAP.md` (opcionalmente desde un documento semilla) |
 | `/livingdocs-inventory` | Deriva el catálogo de capacidades del código y propone el slicing antes de escribir |
 | `/livingdocs-record` | Tras un cambio: actualiza `CHANGELOG.md` y las feature docs afectadas según el diff |
@@ -153,12 +151,6 @@ Salida `0` si está limpio, `1` si hay hallazgos. Comprueba seis cosas:
 5. Los enlaces relativos resuelven a archivos existentes
 6. `CHANGELOG.md` no va detrás del último commit de código en las `triggerPaths`
 
-## Hook de Cursor
-
-El install copia [`assets/hooks/livingdocs-stop.sh`](assets/hooks/livingdocs-stop.sh) a `.cursor/hooks/livingdocs-stop.sh` y fusiona la entrada de [`assets/hooks.json`](assets/hooks.json) en `.cursor/hooks.json`.
-
-En el evento `stop`, el hook mira si hubo cambios en rutas de disparo sin actualización correspondiente en la documentación; si es así, recuerda al agente ejecutar `/livingdocs-record`. No bloquea el trabajo: es un recordatorio con `loop_limit: 1`.
-
 ## Configuración
 
 `.livingdocs.json` en la raíz del proyecto destino (lo escribe `/livingdocs-install`):
@@ -170,10 +162,10 @@ En el evento `stop`, el hook mira si hubo cambios en rutas de disparo sin actual
 }
 ```
 
-- **`triggerPaths`** — directorios cuyo contenido cambia el comportamiento observable (código, prompts, skills, schemas, config de runtime). El linter y el hook los usan para detectar cambios sin documentar.
+- **`triggerPaths`** — directorios cuyo contenido cambia el comportamiento observable (código, prompts, skills, schemas, config de runtime). El linter los usa para detectar si el changelog se quedó atrás.
 - **`satisfyingPaths`** — rutas que “cierran” la deuda de documentación (normalmente changelog y feature docs).
 
-Ajusta las listas a tu repo; no edites el script del linter ni el hook.
+Ajusta las listas a tu repo; no edites el script del linter. El agente actualiza la documentación con `/livingdocs-record` al cerrar el cambio; `/livingdocs-audit` detecta lo que se haya saltado.
 
 ## Estructura de este repositorio
 
@@ -182,9 +174,7 @@ livingdocs/
 ├── .cursor-plugin/plugin.json   # manifiesto Cursor
 ├── .claude-plugin/plugin.json   # manifiesto Claude Code
 ├── assets/
-│   ├── livingdocs-lint.mjs      # linter estructural
-│   ├── hooks.json               # fragmento de hooks a fusionar
-│   └── hooks/livingdocs-stop.sh
+│   └── livingdocs-lint.mjs      # linter estructural
 ├── skills/
 │   ├── livingdocs-install/
 │   ├── livingdocs-vision/

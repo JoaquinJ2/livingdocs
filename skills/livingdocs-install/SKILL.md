@@ -1,11 +1,11 @@
 ---
 name: livingdocs-install
-description: Install the livingdocs documentation system into a repository. Use when the user asks to set up livingdocs, install living documentation, scaffold DDD.md / CHANGELOG.md / FEATURES.md, add the documentation lint script or the documentation stop hook, or says "/livingdocs-install".
+description: Install the livingdocs documentation system into a repository. Use when the user asks to set up livingdocs, install living documentation, scaffold DDD.md / CHANGELOG.md / FEATURES.md, add the documentation lint script, or says "/livingdocs-install".
 ---
 
 # livingdocs: install
 
-Deterministic scaffold. **Ask nothing.** Read the repository, write the files, report what changed. Every step is idempotent — re-running this skill must never duplicate a section, a file, or a hook entry.
+Deterministic scaffold. **Ask nothing.** Read the repository, write the files, report what changed. Every step is idempotent — re-running this skill must never duplicate a section or a file.
 
 Templates live at `../../templates/` relative to this file. Assets live at `../../assets/`.
 
@@ -19,14 +19,14 @@ Before writing anything, gather the four project-specific facts that `DDD.md` re
 
 - **Where issues and specs live** — check `AGENTS.md`, `CLAUDE.md`, `docs/agents/`, `.scratch/`, `.github/ISSUE_TEMPLATE/`, or a Jira/Linear reference in the README. If nothing points either way, write `Not configured.`
 - **Where the glossary and decisions live** — look for `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/adr/`. These are a different system from feature docs and must not be merged with them.
-- **Which top-level paths change observable behaviour** — the trigger paths. These are anything whose contents change what the software does, not only compiled or interpreted source. Start with the source directories (`src/`, `app/`, `lib/`, `bin/`, and any service or package roots), then add the payload directories that are behaviour in another form: prompt directories, `skills/` and other agent-instruction trees, workflow, rule and policy files, schemas, and configuration the product reads at runtime. Editing a `SKILL.md` or a prompt template changes what the system does as surely as editing a function, so those directories belong on the list. Ignore build output, `node_modules/`, fixtures, and anything in `.gitignore`. When a directory is genuinely borderline, include it: a spurious re-prompt costs a sentence, a missed trigger path costs a silent documentation gap.
+- **Which top-level paths change observable behaviour** — the trigger paths. These are anything whose contents change what the software does, not only compiled or interpreted source. Start with the source directories (`src/`, `app/`, `lib/`, `bin/`, and any service or package roots), then add the payload directories that are behaviour in another form: prompt directories, `skills/` and other agent-instruction trees, workflow, rule and policy files, schemas, and configuration the product reads at runtime. Editing a `SKILL.md` or a prompt template changes what the system does as surely as editing a function, so those directories belong on the list. Ignore build output, `node_modules/`, fixtures, and anything in `.gitignore`. When a directory is genuinely borderline, include it: a spurious trigger path only makes the lint ask whether the changelog is behind, a missed trigger path costs a silent documentation gap.
 - **The project name** — from `package.json`, the README title, or the directory name.
 
 ## 2. Write the scaffold
 
 Create each of these only if it is absent. If it already exists, leave it alone and note it as "already present" in the report.
 
-- `.livingdocs.json` — the trigger-path config both the lint script and the stop hook read. Write the trigger paths from step 1 as directory prefixes, payload directories included:
+- `.livingdocs.json` — the trigger-path config the lint script reads. Write the trigger paths from step 1 as directory prefixes, payload directories included:
 
 ```json
 {
@@ -42,15 +42,16 @@ Create each of these only if it is absent. If it already exists, leave it alone 
 
 Leave no `{{PLACEHOLDER}}` behind in any file you write.
 
-## 3. Install the assets
+## 3. Install the lint
 
 - `assets/livingdocs-lint.mjs` → `bin/livingdocs-lint.mjs`
-- `assets/hooks/livingdocs-stop.sh` → `.cursor/hooks/livingdocs-stop.sh`, then `chmod +x` it
-- `assets/hooks.json` → merge into `.cursor/hooks.json`
 
-Copy the two script files **verbatim** — byte for byte, no retyping, no edits, not even to the path lists. Both read `.livingdocs.json` for the repo-specific paths, so there is nothing in them to customise, and an edited copy is silently reverted by the next plugin update. Overwrite the two script destinations if they already exist — the plugin owns them.
+Copy the lint script **verbatim** — byte for byte, no retyping, no edits, not even to the path lists. It reads `.livingdocs.json` for the repo-specific paths, so there is nothing in it to customise, and an edited copy is silently reverted by the next plugin update. Overwrite the destination if it already exists — the plugin owns it.
 
-**Merging `hooks.json` is the one place that needs care.** If `.cursor/hooks.json` does not exist, copy the asset. If it does, parse both, keep the existing `version`, and append the livingdocs entry to the `stop` array only if no entry with the same `command` is already there. Every other event and every unrelated entry survives untouched. Never overwrite an existing `.cursor/hooks.json`.
+Livingdocs does not install a Cursor hook. The agent updates the docs with `/livingdocs-record` as part of the change; `/livingdocs-audit` catches anything that was skipped. If a previous install left the stop hook behind, remove it and leave every unrelated hook alone:
+
+- Delete `.cursor/hooks/livingdocs-stop.sh` if it exists.
+- If `.cursor/hooks.json` exists, remove every `stop` entry whose `command` is `.cursor/hooks/livingdocs-stop.sh`. Keep the existing `version` and every other event. If the `stop` array is empty afterwards, delete that key. If `hooks` is then empty, delete `.cursor/hooks.json`. Never rewrite or drop an unrelated entry.
 
 ## 4. Wire AGENTS.md
 
